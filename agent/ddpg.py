@@ -51,6 +51,7 @@ class DDPG:
 
         if add_noise:
             action = action + self.ou_noise.sample()
+            action = np.clip(action, -1, 1)
 
         return action
 
