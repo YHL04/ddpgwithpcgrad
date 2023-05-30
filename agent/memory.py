@@ -33,7 +33,7 @@ class Memory:
         indices = []
         for i in range(batch_size):
             while True:
-                index = random.randint(0, self.count - 1)
+                index = random.randrange(0, self.count - 1)
 
                 if index == self.current - 1:
                     continue

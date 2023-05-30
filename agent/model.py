@@ -72,19 +72,31 @@ class Model(nn.Module):
         self.actor = Actor(d_model, action_size, d_model)
         self.critic = Critic(d_model, action_size, d_model)
 
-    def actor_forward(self, x):
-        x = self.actor(self.body(x))
+    def scale_gradients(self, scale):
+        for x in self.parameters():
+            if x.grad is not None:
+                x.grad = x.grad * scale
+
+    def body_forward(self, x):
+        x = self.body(x)
 
         return x
 
-    def critic_forward(self, x, freeze_critic=False):
-        rep = self.body(x)
-        action = self.actor(rep)
+    def actor_forward(self, x, body=True):
+        if body:
+            x = self.body(x)
 
-        if freeze_critic:
-            with torch.no_grad():
-                x = self.critic(rep, action)
-        else:
-            x = self.critic(rep, self.actor(rep))
+        x = self.actor(x)
+
+        return x
+
+    def critic_forward(self, x, action=None, body=True):
+        if body:
+            x = self.body(x)
+
+        if action is None:
+            action = self.actor(x)
+
+        x = self.critic(x, action)
 
         return x
