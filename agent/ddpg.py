@@ -32,7 +32,7 @@ class DDPG:
         self.target_critic = deepcopy(self.critic)
 
         self.actor_opt = Adam(self.actor.parameters(), lr=1e-4)
-        self.critic_opt = Adam(self.critic.parameters(), lr=4e-4)
+        self.critic_opt = Adam(self.critic.parameters(), lr=1e-3)
 
         self.memory = Memory(state_size, action_size, buffer_size)
         self.ou_noise = OrnsteinUhlenbeckProcess(size=action_size,
@@ -51,7 +51,6 @@ class DDPG:
 
         if add_noise:
             action = action + self.ou_noise.sample()
-            action = np.clip(action, -2, 2)
 
         return action
 
@@ -61,11 +60,11 @@ class DDPG:
     def update(self, batch_size, gamma=0.99):
         state, action, reward, next_state, done = self.memory.get_minibatch(batch_size)
 
-        state = torch.tensor(np.array(state), dtype=torch.float32).view(batch_size, self.state_size).to(self.device)
-        action = torch.tensor(action, dtype=torch.float32).view(batch_size, self.action_size).to(self.device)
-        reward = torch.tensor(reward, dtype=torch.float32).view(batch_size, 1).to(self.device)
-        next_state = torch.tensor(np.array(next_state), dtype=torch.float32).view(batch_size, self.state_size).to(self.device)
-        done = torch.tensor(done, dtype=torch.float32).view(batch_size, 1).to(self.device)
+        state = torch.tensor(np.array(state), dtype=torch.float32, device=self.device).view(batch_size, self.state_size)
+        action = torch.tensor(action, dtype=torch.float32, device=self.device).view(batch_size, self.action_size)
+        reward = torch.tensor(reward, dtype=torch.float32, device=self.device).view(batch_size, 1)
+        next_state = torch.tensor(np.array(next_state), dtype=torch.float32, device=self.device).view(batch_size, self.state_size)
+        done = torch.tensor(done, dtype=torch.float32, device=self.device).view(batch_size, 1)
 
         with torch.no_grad():
             next_q_values = self.critic(next_state, self.actor(next_state))

@@ -14,16 +14,13 @@ class Env:
 
     @property
     def action_size(self):
-        try:
-            return self.env.action_space.n
-        except:
-            return 1
+        return self.env.action_space.shape[0]
 
     def reset(self):
         return self.env.reset()
 
-    def step(self, action):
-        return self.env.step(action)
+    def step(self, action, bound=2):
+        return self.env.step(action * bound)
 
     def render(self):
         self.env.render()

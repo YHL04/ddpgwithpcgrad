@@ -12,14 +12,17 @@ def main(epochs=100000, d_model=512, batch_size=64, device="cuda"):
     file = open(f"logs/{dt}", "w")
 
     env = Env("Pendulum-v1")
-    agent = DDPG(env.state_size, env.action_size, d_model, buffer_size=10000000, device=device)
+    agent = DDPG(env.state_size, env.action_size, d_model, buffer_size=1000000, device=device)
+
+    print("State size ", env.state_size)
+    print("Action size ", env.action_size)
 
     for i in range(100):
         state, _ = env.reset()
         agent.reset()
         done = False
         while not done:
-            action = np.random.uniform(-2, 2, (1,))
+            action = np.random.uniform(-1, 1, (env.action_size,))
             next_state, reward, _, done, _ = env.step(action)
             agent.remember(state, action, reward, done)
 

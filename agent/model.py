@@ -33,8 +33,8 @@ class Actor(nn.Module):
             nn.Tanh()
         )
 
-    def forward(self, x, bound=2):
-        x = self.actor(x) * bound
+    def forward(self, x):
+        x = self.actor(x)
 
         return x
 
@@ -46,19 +46,18 @@ class Critic(nn.Module):
 
         self.linear1 = nn.Sequential(
             nn.Linear(state_size, d_model),
+            nn.ReLU()
         )
-        self.linear2 = nn.Sequential(
-            nn.Linear(action_size, d_model),
-        )
-
         self.critic = nn.Sequential(
-            nn.Linear(d_model * 2, d_model),
+            nn.Linear(d_model + action_size, d_model),
+            nn.ReLU(),
+            nn.Linear(d_model, d_model),
             nn.ReLU(),
             nn.Linear(d_model, 1)
         )
 
     def forward(self, x, action):
-        x = torch.concat([self.linear1(x), self.linear2(action)], dim=-1)
+        x = torch.concat([self.linear1(x), action], dim=-1)
         x = self.critic(x)
 
         return x
