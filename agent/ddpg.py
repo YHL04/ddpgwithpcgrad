@@ -28,8 +28,10 @@ class DDPG:
 
         self.actor = Actor(state_size, action_size, d_model).to(device)
         self.critic = Critic(state_size, action_size, d_model).to(device)
-        self.target_actor = deepcopy(self.actor)
-        self.target_critic = deepcopy(self.critic)
+        self.target_actor = Actor(state_size, action_size, d_model).to(device)
+        self.target_critic = Critic(state_size, action_size, d_model).to(device)
+        self.hard_update(self.target_actor, self.actor)
+        self.hard_update(self.target_critic, self.critic)
 
         self.actor_opt = Adam(self.actor.parameters(), lr=1e-4)
         self.critic_opt = Adam(self.critic.parameters(), lr=1e-3)
@@ -69,11 +71,10 @@ class DDPG:
 
         with torch.no_grad():
             next_q_values = self.critic(next_state, self.actor(next_state))
-            target = reward + gamma * next_q_values * (1 - done)
+            target = reward + gamma * next_q_values  # * (1 - done)
 
         # critic training
         self.critic.zero_grad()
-        self.critic.train()
 
         expected = self.critic(state, action)
         critic_loss = F.huber_loss(expected, target)
@@ -84,7 +85,6 @@ class DDPG:
 
         # actor training
         self.actor.zero_grad()
-        self.actor.train()
 
         actor_loss = -self.critic(state, self.actor(state))
         actor_loss = actor_loss.mean()
@@ -96,6 +96,11 @@ class DDPG:
         self.soft_update(self.target_actor, self.actor, tau=0.001)
 
         return critic_loss.item(), actor_loss.item()
+
+    @staticmethod
+    def hard_update(target, source):
+        for target_param, param in zip(target.parameters(), source.parameters()):
+            target_param.data.copy_(param.data)
 
     @staticmethod
     def soft_update(target, source, tau):

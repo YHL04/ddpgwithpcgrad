@@ -5,8 +5,8 @@ import gym
 
 class Env:
 
-    def __init__(self, env_name):
-        self.env = gym.make(env_name, render_mode="rgb_array")
+    def __init__(self, env_name, render_mode="rgb_array"):
+        self.env = gym.make(env_name, render_mode=render_mode)
 
     @property
     def state_size(self):
